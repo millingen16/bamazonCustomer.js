@@ -50,8 +50,6 @@ function inventory() {
 }
 
 
-
-
 function productToBuy() {
     inquirer.prompt([
         {
@@ -66,26 +64,27 @@ function productToBuy() {
         }
     ])
     .then(function(answer) {
-        connection.query("SELECT * FROM products WHERE item_id = ", answer.item_id, function(err, res) {
+        console.log(answer);
+        connection.query("SELECT * FROM product WHERE item_id=", answer.pickItem, function(err, res) {
+            console.log(answer.pickItem);
             for(var i = 0; i < res.length; i++) {
-            var currentPrice = res[i].price;
-            var total = (answer.ittemAmount * currentPrice).toFixed(2)
-            if(res[i].stock_quantity < answer.ittemAmount) {
-                console.log("Invalid Amount\n");
-            }else {
-                connection.query("UPDATE products SET stock_quantity = stock_quantity " +
-                answer.ittemAmount + "WHERE item_id = " + answer.item_id, function(err, res) {
-                    console.log(colors.green("INVENTORY UPDATED\n"));
-                    console.log(colors.yellow("You Total Amount Is: $\n" + total));
-                    console.log("Thank You For Your Order\n")
-                });
+                console.log(res);
+                if(answer.itemAmount > res[i].stock_quantity) {
+                    console.log(colors.red("\---------------------------\n"));
+                    console.log("\---Insufficient quantity---\n");
+                    console.log(colors.red("\---------------------------\n"));
+                } else {
+                    var stockUpdate = res[i].stock_quantity - answer.itemAmount;
+                    console.log(stockUpdate);
+                    console.log(colors.blue("TOTAL " + answer.pickItem * res[i].price));
+                    console.log(colors.white("\---------------------------\n"));
+                }
             }
-          }
-        })
-    })
-    endSale();
+        });
+    });
 }
 
-function endSale() {
-    connection.end();
-}
+
+
+
+
