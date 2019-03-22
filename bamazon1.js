@@ -14,7 +14,6 @@ var connection = mysql.createConnection({
 
 
 
-
 connection.connect(function(err) {
     if(err) throw err;
     console.log("connection as id " + connection.threadId);
@@ -30,7 +29,7 @@ function inventory() {
     function(err, res) {
         if(err) throw err;
         var table1 = new table([{
-            head: ["ID", "PRODUCT", "DEPARTMENT", "PRICE", "STOCK"],
+            head: ["ID", "PRODUCTS", "DEPARTMENT", "PRICE", "STOCK"],
             colWidths: [100, 200, 200, 200, 200]
         }]);
         console.log(colors.green("\THESE ARE THE ITEMS WE HAVE FOR SALE\n"));
@@ -65,8 +64,10 @@ function productToBuy() {
     ])
     .then(function(answer) {
         console.log(answer);
-        connection.query("SELECT * FROM product WHERE item_id=", answer.pickItem, function(err, res) {
-            console.log(answer.pickItem);
+        connection.query("SELECT * FROM products WHERE item_id=?", answer.pickItem, function(err, res) {
+            console.log(colors.green("Quantity " + answer.itemAmount));
+            var order = answer.pickItem -1;
+            var results = res;
             for(var i = 0; i < res.length; i++) {
                 console.log(res);
                 if(answer.itemAmount > res[i].stock_quantity) {
@@ -75,16 +76,35 @@ function productToBuy() {
                     console.log(colors.red("\---------------------------\n"));
                 } else {
                     var stockUpdate = res[i].stock_quantity - answer.itemAmount;
-                    console.log(stockUpdate);
-                    console.log(colors.blue("TOTAL " + answer.pickItem * res[i].price));
+                    console.log(colors.blue("\--------------------------------------\n"));
+                    console.log(colors.yellow("Item ID Ordered " + stockUpdate));
+
+                    console.log(colors.green("TOTAL " + "$" + 
+                    answer.pickItem * parseFloat(res[i].price.toFixed(2) + "\r\n")));
                     console.log(colors.white("\---------------------------\n"));
                 }
             }
         });
+        orderConfirm();
     });
 }
 
-
+function orderConfirm() {
+    inquirer.prompt([{
+        type: "confirm",
+        name: "itemPicked",
+        message: "Please confirm the amount of items you wnat and the Total"
+    }]).then(
+        function(answer) {
+            if(answer.itemPicked) {
+                console.log(colors.yellow("Your Order Has Been Place!"));
+            } else {
+                console.log(colors.red("ERROR"));
+            }
+        }
+    )
+}
+inventory();
 
 
 
